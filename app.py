@@ -6,6 +6,9 @@ from datetime import datetime
 import os
 import uuid
 
+# Define application version
+APP_VERSION = "1.0.0"
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_for_testing')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///microblog.db'
@@ -372,6 +375,16 @@ def view_post(post_id):
         response.total_replies_count = count_total_replies(response)
     
     return render_template('view_post.html', post=post, responses=responses)
+
+@app.route('/health')
+def health_check():
+    """Unprotected health check endpoint for load balancer."""
+    return {"status": "healthy"}, 200
+
+@app.route('/about')
+def about():
+    """Unprotected route that displays the About page with application version."""
+    return render_template('about.html', version=APP_VERSION)
 
 @app.context_processor
 def utility_processor():

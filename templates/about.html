@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}About - MicroBlog{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>About MicroBlog</h1>
+    </div>
+    <div class="card-body">
+        <p>MicroBlog is a simple microblogging platform that allows users to share short posts, follow other users, and engage with content.</p>
+        <p>This application was built using Flask, SQLAlchemy, and Bootstrap.</p>
+        <hr>
+        <p><strong>Version:</strong> {{ version }}</p>
+    </div>
+</div>
+{% endblock %}
