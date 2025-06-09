@@ -65,26 +65,9 @@ jobs:
         name: task-definition
         path: ${{ steps.task-def.outputs.task-definition }}
 
-  approval:
-    name: Deployment Approval
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Manual approval
-      uses: trstringer/manual-approval@v1
-      with:
-        secret: ${{ github.token }}
-        approvers: ${{ github.actor }}
-        minimum-approvals: 1
-        issue-title: "Deploy to ECS"
-        issue-body: "Please approve or deny the deployment to ECS"
-        exclude-workflow-initiator-as-approver: false
-        timeout-minutes: 60
-
   deploy:
     name: Deploy to ECS
-    needs: approval
+    needs: build-and-push
     runs-on: ubuntu-latest
     
     steps:
