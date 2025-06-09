@@ -1,0 +1,109 @@
+name: Build and Deploy to ECS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-west-1
+  ECR_REPOSITORY: ada-microblogging
+  ECS_SERVICE: ada-microblog-service-bxi3mb2i
+  ECS_CLUSTER: ada-microblogging
+  CONTAINER_NAME: ada-microblog-container
+  ECS_TASK_DEFINITION: ecs/task.json
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build, tag, and push multi-architecture image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build multi-architecture (x86_64 and ARM64) docker container and push it to ECR
+        docker buildx create --use
+        docker buildx build --platform linux/amd64,linux/arm64 \
+          --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          --tag $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+          --push \
+          .
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION }}
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Upload task definition as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: task-definition
+        path: ${{ steps.task-def.outputs.task-definition }}
+
+  approval:
+    name: Deployment Approval
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Manual approval
+      uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ github.token }}
+        approvers: ${{ github.actor }}
+        minimum-approvals: 1
+        issue-title: "Deploy to ECS"
+        issue-body: "Please approve or deny the deployment to ECS"
+        exclude-workflow-initiator-as-approver: false
+        timeout-minutes: 60
+
+  deploy:
+    name: Deploy to ECS
+    needs: approval
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Download task definition
+      uses: actions/download-artifact@v3
+      with:
+        name: task-definition
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
