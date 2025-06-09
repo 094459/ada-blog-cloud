@@ -1,0 +1,140 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:eu-west-1:704533066374:task-definition/ada-microblog:5",
+    "containerDefinitions": [
+        {
+            "name": "ada-microblog-container",
+            "image": "704533066374.dkr.ecr.eu-west-1.amazonaws.com/ada-microblogging:latest-arm64",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "S3_BUCKET",
+                    "value": "ada-microblogging"
+                },
+                {
+                    "name": "FLASK_APP",
+                    "value": "app_s3.py"
+                },
+                {
+                    "name": "S3_REGION",
+                    "value": "eu-west-1"
+                },
+                {
+                    "name": "DB_PORT",
+                    "value": "5432"
+                },
+                {
+                    "name": "FLASK_ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "DB_USER",
+                    "value": "postgres"
+                },
+                {
+                    "name": "DB_NAME",
+                    "value": "adablog"
+                },
+                {
+                    "name": "DB_HOST",
+                    "value": "ada-microblogging.ceinb9vexcbc.eu-west-1.rds.amazonaws.com"
+                }
+            ],
+            "secrets": [
+                {
+                "name": "DB_PASSWORD",
+                "valueFrom": "arn:aws:secretsmanager:eu-west-1:704533066374:secret:ada-microblog/db-password:password::"
+                },
+                {
+                "name": "SECRET_KEY",
+                "valueFrom": "arn:aws:secretsmanager:eu-west-1:704533066374:secret:ada-microblog/secret-key:key::"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/ada-microblog",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "eu-west-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://127.0.0.1:5000/ || exit 0"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "ada-microblog",
+    "taskRoleArn": "arn:aws:iam::704533066374:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::704533066374:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 5,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.container-health-check"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "ARM64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2025-06-07T04:58:25.767Z",
+    "registeredBy": "arn:aws:sts::704533066374:assumed-role/AWSReservedSSO_AdministratorAccess_d61658aa9a839cbd/ricsue@amazon.co.uk",
+    "tags": []
+}

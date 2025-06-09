@@ -1,7 +1,5 @@
 .venv
 .venv/
-ecs
-ecs/
 instance
 instance/
 data-model

@@ -60,7 +60,7 @@ jobs:
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Upload task definition as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: task-definition
         path: ${{ steps.task-def.outputs.task-definition }}
@@ -96,7 +96,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Download task definition
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: task-definition
 
