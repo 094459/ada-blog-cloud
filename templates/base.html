@@ -124,7 +124,7 @@
         {% block content %}{% endblock %}
     </div>
 
-    {% if get_current_user() %}
+    {% if get_current_user() and request.path != url_for('new_post') %}
         <a href="{{ url_for('new_post') }}" class="btn btn-primary new-post-btn">+</a>
     {% endif %}
 
