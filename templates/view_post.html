@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}View Post - MicroBlog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card post-card mb-4">
+            <div class="card-body">
+                <div class="post-header">
+                    <div class="post-avatar">
+                        {% if post.author.profile_image %}
+                            <img src="{{ post.author.profile_image_url }}" alt="{{ post.author.alias }}">
+                        {% else %}
+                            {{ post.author.alias[0] }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{{ url_for('profile', user_id=post.author.id) }}" class="fw-bold text-decoration-none">{{ post.author.alias }}</a>
+                        <div class="text-muted small">{{ post.created_at.strftime('%b %d, %Y at %H:%M') }}</div>
+                    </div>
+                </div>
+                
+                {% if post.parent_post %}
+                <div class="mt-2 mb-3 ps-3 border-start">
+                    <div class="text-muted small">Replying to <a href="{{ url_for('profile', user_id=post.parent_post.author.id) }}">@{{ post.parent_post.author.alias }}</a></div>
+                    <a href="{{ url_for('view_post', post_id=post.parent_post.id) }}" class="text-decoration-none">
+                        <div class="text-muted">{{ post.parent_post.content[:100] }}{% if post.parent_post.content|length > 100 %}...{% endif %}</div>
+                    </a>
+                </div>
+                {% endif %}
+                
+                <p class="card-text mt-3">{{ post.content }}</p>
+                
+                {% if post.images.count() > 0 %}
+                <div class="mt-2">
+                    {% for image in post.images %}
+                    <img src="{{ image.s3_url }}" alt="Post image" class="img-fluid rounded mb-2" style="max-height: 300px;">
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% if post.links.count() > 0 %}
+                <div class="mt-2">
+                    {% for link in post.links %}
+                    <a href="{{ link.url }}" target="_blank" class="d-block card p-2 text-decoration-none">
+                        <div class="fw-bold">{{ link.title or link.url }}</div>
+                        <div class="text-muted small">{{ link.url }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="post-actions">
+                    <div>
+                        <span class="text-muted">{{ post.total_replies_count }} Replies</span>
+                        <span class="ms-3 text-muted">{{ post.upvoters.count() }} Upvotes</span>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('upvote', post_id=post.id) }}" class="btn btn-sm {% if get_current_user() and post in get_current_user().upvoted_posts %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Upvote
+                        </a>
+                        <a href="{{ url_for('new_post', parent_id=post.id) }}" class="btn btn-sm btn-primary">Reply</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h5 class="mb-3">Replies</h5>
+        
+        {% if responses %}
+            {% for response in responses %}
+                <div class="card post-card mb-3">
+                    <div class="card-body">
+                        <div class="post-header">
+                            <div class="post-avatar">
+                                {% if response.author.profile_image %}
+                                    <img src="{{ response.author.profile_image_url }}" alt="{{ response.author.alias }}">
+                                {% else %}
+                                    {{ response.author.alias[0] }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{{ url_for('profile', user_id=response.author.id) }}" class="fw-bold text-decoration-none">{{ response.author.alias }}</a>
+                                <div class="text-muted small">{{ response.created_at.strftime('%b %d, %Y at %H:%M') }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if response.parent_post and response.parent_post.id != post.id %}
+                        <div class="mt-2 mb-3 ps-3 border-start">
+                            <div class="text-muted small">Replying to <a href="{{ url_for('profile', user_id=response.parent_post.author.id) }}">@{{ response.parent_post.author.alias }}</a></div>
+                            <a href="{{ url_for('view_post', post_id=response.parent_post.id) }}" class="text-decoration-none">
+                                <div class="text-muted">{{ response.parent_post.content[:100] }}{% if response.parent_post.content|length > 100 %}...{% endif %}</div>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <p class="card-text mt-3">{{ response.content }}</p>
+                        
+                        {% if response.images.count() > 0 %}
+                        <div class="mt-2">
+                            {% for image in response.images %}
+                            <img src="{{ image.s3_url }}" alt="Post image" class="img-fluid rounded mb-2" style="max-height: 300px;">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if response.links.count() > 0 %}
+                        <div class="mt-2">
+                            {% for link in response.links %}
+                            <a href="{{ link.url }}" target="_blank" class="d-block card p-2 text-decoration-none">
+                                <div class="fw-bold">{{ link.title or link.url }}</div>
+                                <div class="text-muted small">{{ link.url }}</div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="post-actions">
+                            <div>
+                                <a href="{{ url_for('view_post', post_id=response.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-chat"></i> {{ response.total_replies_count }}
+                                </a>
+                                <a href="{{ url_for('upvote', post_id=response.id) }}" class="btn btn-sm {% if get_current_user() and response in get_current_user().upvoted_posts %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    <i class="bi bi-hand-thumbs-up"></i> {{ response.upvoters.count() }}
+                                </a>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('new_post', parent_id=response.id) }}" class="btn btn-sm btn-outline-primary">Reply</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">No replies yet. Be the first to reply!</div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">About the Author</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="post-avatar">
+                        {% if post.author.profile_image %}
+                            <img src="{{ post.author.profile_image_url }}" alt="{{ post.author.alias }}">
+                        {% else %}
+                            {{ post.author.alias[0] }}
+                        {% endif %}
+                    </div>
+                    <div class="ms-2">
+                        <a href="{{ url_for('profile', user_id=post.author.id) }}" class="fw-bold text-decoration-none">{{ post.author.alias }}</a>
+                        <div class="text-muted small">Joined {{ post.author.created_at.strftime('%B %Y') }}</div>
+                    </div>
+                </div>
+                
+                {% if post.author.bio %}
+                    <p>{{ post.author.bio }}</p>
+                {% else %}
+                    <p class="text-muted">No bio provided.</p>
+                {% endif %}
+                
+                {% if get_current_user() and get_current_user().id != post.author.id %}
+                    {% if get_current_user().is_following(post.author) %}
+                        <a href="{{ url_for('unfollow', user_id=post.author.id) }}" class="btn btn-outline-primary btn-sm d-block">Unfollow</a>
+                    {% else %}
+                        <a href="{{ url_for('follow', user_id=post.author.id) }}" class="btn btn-primary btn-sm d-block">Follow</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

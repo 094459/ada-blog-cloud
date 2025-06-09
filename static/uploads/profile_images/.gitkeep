@@ -1,0 +1,2 @@
+# This file ensures the profile_images directory is included in version control
+# even when empty. The directory is needed for storing user profile images.

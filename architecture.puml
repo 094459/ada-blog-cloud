@@ -1,0 +1,99 @@
+@startuml MicroBlog Architecture
+
+!define RECTANGLE class
+
+skinparam {
+    BackgroundColor white
+    ArrowColor black
+    BorderColor black
+    RectangleBackgroundColor white
+}
+
+' Title
+title MicroBlog Application Architecture
+
+' Components
+package "Data Structures" {
+    database "SQLite Database" {
+        [User Table]
+        [Post Table]
+        [Image Table]
+        [Link Table]
+        [Upvotes Table]
+        [User Follows Table]
+    }
+
+    note right of [User Table]
+        - id (PK)
+        - email (unique)
+        - password_hash
+        - alias
+        - bio
+        - profile_image
+        - created_at
+    end note
+
+    note right of [Post Table]
+        - id (PK)
+        - content
+        - author_id (FK)
+        - parent_id (FK)
+        - responder_id (FK)
+        - created_at
+        - updated_at
+    end note
+}
+
+package "Local File Storage" {
+    folder "Static Files" {
+        [Profile Images]
+    }
+    note right of [Profile Images]
+        /static/uploads/profile_images/
+        - Stores user profile images
+        - UUID-based filenames
+        - Max size: 5MB
+        - Formats: JPG, PNG, GIF
+    end note
+}
+
+package "Core Compute Logic" {
+    [Flask Application] as App
+    
+    package "Route Handlers" {
+        [User Routes]
+        [Post Routes]
+        [Profile Routes]
+    }
+    
+    package "Business Logic" {
+        [User Management]
+        [Post Management]
+        [File Management]
+        [Authentication]
+    }
+    
+    package "Template Engine" {
+        [Jinja2 Templates]
+    }
+}
+
+' Relationships
+[User Routes] --> [User Management]
+[Post Routes] --> [Post Management]
+[Profile Routes] --> [File Management]
+[User Management] --> [SQLite Database]
+[Post Management] --> [SQLite Database]
+[File Management] --> [Profile Images]
+[User Management] --> [Authentication]
+[App] --> [Route Handlers]
+[App] --> [Jinja2 Templates]
+[Jinja2 Templates] ..> [SQLite Database]: reads
+[User Management] ..> [Profile Images]: manages
+
+' Layout hints
+[SQLite Database] -[hidden]-> [Profile Images]
+[Route Handlers] -[hidden]-> [Business Logic]
+[Business Logic] -[hidden]-> [Jinja2 Templates]
+
+@enduml

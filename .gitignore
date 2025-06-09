@@ -1,0 +1,16 @@
+.venv
+.venv/
+ecs
+ecs/
+instance
+instance/
+data-model
+data-model/
+spec
+spec/
+build_and_push.sh
+build_and_push_multi.sh
+create_manifest.sh
+setup_rds_env.sh
+deploy_ecs_task.sh
+.DS_Store

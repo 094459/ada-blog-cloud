@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}New Post - MicroBlog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">{% if parent_post %}Reply to Post{% else %}Create New Post{% endif %}</h4>
+            </div>
+            <div class="card-body">
+                {% if parent_post %}
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="post-avatar">
+                            {% if parent_post.author.profile_image %}
+                                <img src="{{ parent_post.author.profile_image_url }}" alt="{{ parent_post.author.alias }}">
+                            {% else %}
+                                {{ parent_post.author.alias[0] }}
+                            {% endif %}
+                        </div>
+                        <div class="ms-2">
+                            <div class="fw-bold">{{ parent_post.author.alias }}</div>
+                            <div class="text-muted small">{{ parent_post.created_at.strftime('%b %d, %Y at %H:%M') }}</div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('view_post', post_id=parent_post.id) }}" class="text-decoration-none text-dark">
+                        <p class="mb-0">{{ parent_post.content }}</p>
+                    </a>
+                </div>
+                {% endif %}
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% if parent_post %}
+                    <input type="hidden" name="parent_id" value="{{ parent_post.id }}">
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">{% if parent_post %}Your reply{% else %}What's on your mind?{% endif %}</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" maxlength="1024" required></textarea>
+                        <div class="form-text text-end">0/1024 characters</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label">Upload Image (optional)</label>
+                        <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">Or Image URL (optional)</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="link_url" class="form-label">Link URL (optional)</label>
+                        <input type="url" class="form-control" id="link_url" name="link_url">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="link_title" class="form-label">Link Title (optional)</label>
+                        <input type="text" class="form-control" id="link_title" name="link_title">
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">{% if parent_post %}Reply{% else %}Post{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('content').addEventListener('input', function() {
+        const maxLength = 1024;
+        const currentLength = this.value.length;
+        const counter = this.nextElementSibling;
+        counter.textContent = `${currentLength}/${maxLength} characters`;
+        
+        if (currentLength > maxLength) {
+            counter.classList.add('text-danger');
+        } else {
+            counter.classList.remove('text-danger');
+        }
+    });
+</script>
+{% endblock %}
