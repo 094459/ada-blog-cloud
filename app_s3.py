@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 import logging
 
 # Define application version
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.2.0"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_for_testing')
